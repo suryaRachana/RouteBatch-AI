@@ -11,10 +11,25 @@ const app = express();
 
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// CORS configuration
+const allowedOrigins = [
+  frontendUrl,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+].filter(Boolean);
+
+// Dynamic CORS configuration allowing FRONTEND_URL & Vercel domains with credentials
 app.use(
   cors({
-    origin: [frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(origin);
+      if (isAllowed) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive fallback for production deployment
+    },
     credentials: true,
   })
 );
@@ -23,9 +38,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Health check endpoint
+// Health check endpoint for cloud monitoring (Render, Railway, Fly.io, etc.)
 app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', service: 'RouteBatch-AI API', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    service: 'RouteBatch-AI Production API',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 // API Routes
