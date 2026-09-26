@@ -18,6 +18,8 @@ build/
 # Database
 prisma/*.db
 prisma/*.db-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal
 *.sqlite
 *.sqlite-journal
 
